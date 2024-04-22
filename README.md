@@ -1,21 +1,23 @@
 # FiveM Posters
 ## A FiveM Poster system, designed for placing images on walls, all you need is a URL!
 
-
 ## Video Preview
-https://github.com/Xilophinum/posters/assets/44152393/9db2ec16-0b3d-43bd-a2b2-4ab00acfbe48
+[Video Preview](https://github.com/Xilophinum/posters/assets/44152393/9db2ec16-0b3d-43bd-a2b2-4ab00acfbe48)
 
 ## Information
-This is a "poster" system designed to allow people to create their own posters and draw them on any vertically flat surface. There are already a few of these systems out there, but I wanted to share a version that is free, and only requires really one dependancy (ox_lib).
-This has QBCore code with ox_inventory items, feel free to fork and make your own framework/inventory version, I will not do so for you!
+This is a "poster" system originally designed to allow users to create their own posters and display them on any vertically flat surface. While there are other similar systems available, this version is free and only requires a single dependency (ox_lib). It includes QBCore code with ox_inventory items.
 
-This version does not require you to input any image size data, it is automatically captured by the images url. All you need is a valid image URL. Thats it. The DUI will be created based on the images actual size. 
+I, FripeX, have adapted and converted this system to work with ESX, broadening its usability. Feel free to fork and modify it for your own framework/inventory needs—I have included the necessary adaptations for ESX users who might find it beneficial.
 
-This system is great for "graffiti" tagging, advertising your player owned business, etc. 
+No need to input any image size data; it's automatically captured from the image URL. The DUI is created based on the actual size of the images, making this system perfect for "graffiti" tagging, advertising your player-owned business, etc.
 
 ## Dependencies
 - ox_lib
-- QBCore
-- ox_inventory
-  
-As I stated above, feel free to rework this how you would like with your own systems. 
+- QBCore (original)
+- ox_inventory (original)
+- ESX (added by FripeX)
+
+As stated above, feel free to rework this how you would like with your own systems. The ESX version is now available thanks to my adaptation.
+
+## Acknowledgements
+A big thanks to the original developers and the FiveM community for their continuous inspiration and support. This ESX adaptation aims to extend the utility and accessibility of the original system.
