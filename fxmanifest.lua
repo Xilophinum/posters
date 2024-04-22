@@ -16,7 +16,8 @@ files {
 }
 
 client_scripts {
-    'lua/client.lua'
+    'lua/client.lua',
+    'lua/config.lua'
 }
 
 server_scripts {
@@ -25,5 +26,6 @@ server_scripts {
 
 shared_scripts {
     '@ox_lib/init.lua',
-    'lua/shared.lua'
+    'lua/shared.lua',
+    'lua/config.lua'
 }
