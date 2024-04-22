@@ -1,30 +1,44 @@
-RegisteredSprays = {}
+local Framework
+if Config.Framework == 'QBCore' then
+    Framework = exports['qb-core']:GetCoreObject()
+elseif Config.Framework == 'ESX' then
+    ESX = exports["es_extended"]:getSharedObject()
+end
 
+if Config.Framework == 'QBCore' then
+    QBCore.Functions.CreateUseableItem('poster', function(source)
+        TriggerClientEvent("posters:placeImage", source)
+    end)
+elseif Config.Framework == 'ESX' then
+    ESX.RegisterUsableItem('poster', function(source)
+        local xPlayer = ESX.GetPlayerFromId(source)
+        xPlayer.removeInventoryItem('poster', 1)
+        TriggerClientEvent("posters:placeImage", source)
+    end)
+end
 
-ESX = exports["es_extended"]:getSharedObject()
+local RegisteredSprays = {}
 
+if Config.Framework == 'QBCore' then
+    lib.callback.register('posters:getImages', function(source)
+        return RegisteredSprays
+    end)
+elseif Config.Framework == 'ESX' then
+    ESX.RegisterServerCallback('posters:getImages', function(source, cb)
+        cb(RegisteredSprays)
+    end)
+end
 
-ESX.RegisterUsableItem('poster', function(source)
-    TriggerClientEvent("posters:placeImage", source)
-end)
-
--- Add new image event
-RegisterNetEvent("posters:addNewImage")
-AddEventHandler("posters:addNewImage", function(data)
-    local xPlayer = ESX.GetPlayerFromId(source)
+RegisterNetEvent("posters:addNewImage", function(data)
     RegisteredSprays[#RegisteredSprays+1] = data
-    TriggerClientEvent("posters:sendAddedImage", -1, data)
-    xPlayer.removeInventoryItem('poster', 1)
+    if Config.Framework == 'QBCore' then
+        TriggerClientEvent("posters:sendAddedImage", -1, data)
+    elseif Config.Framework == 'ESX' then
+        TriggerClientEvent("posters:sendAddedImage", -1, data)
+    end
 end)
 
--- Get images callback
-ESX.RegisterServerCallback('posters:getImages', function(source, cb)
-    cb(RegisteredSprays)
-end)
-
--- Delete image event
-RegisterNetEvent("posters:deleteImage")
-AddEventHandler("posters:deleteImage", function(id, isOwner)
+RegisterNetEvent("posters:deleteImage", function(id, isOwner)
     for k,v in pairs(RegisteredSprays) do
         if v.id == id then
             table.remove(RegisteredSprays, k)
@@ -32,12 +46,15 @@ AddEventHandler("posters:deleteImage", function(id, isOwner)
         end
     end
     if isOwner then
-        local xPlayer = ESX.GetPlayerFromId(source)
-        xPlayer.addInventoryItem('poster', 1)
+        if Config.Framework == 'QBCore' then
+            -- Specific QBCore handling for giving item back
+        elseif Config.Framework == 'ESX' then
+            local xPlayer = ESX.GetPlayerFromId(source)
+            xPlayer.addInventoryItem('poster', 1)
+        end
     end
 end)
 
--- Register a command to remove a poster
-RegisterCommand("removeposter", function(source, args, rawCommand)
+RegisterCommand("removeposter", function(source, args, raw)
     TriggerClientEvent("posters:removePoster", source)
 end)
