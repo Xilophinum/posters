@@ -1,4 +1,3 @@
-
 editing = false
 deleting = false
 Point1 = false
@@ -7,10 +6,16 @@ ActivePosters = {}
 CurrentPoster = {}
 GLOBAL_COORDS = nil
 TXD = nil 
-local QBCore = exports['qb-core']:GetCoreObject()
+local ESX = nil
 PlayerData = {}
 
-RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+
+ESX = exports["es_extended"]:getSharedObject()
+
+-- Events to manage player data
+RegisterNetEvent('esx:playerLoaded')
+AddEventHandler('esx:playerLoaded', function(xPlayer)
+    PlayerData = xPlayer
     loadData()
 end)
 
@@ -20,13 +25,14 @@ AddEventHandler('onResourceStart', function(resource)
     end
 end)
 
-RegisterNetEvent("QBCore:Client:OnPlayerUnload", function()
+RegisterNetEvent('esx:onPlayerLogout')
+AddEventHandler('esx:onPlayerLogout', function()
     PlayerData = {}
 end)
 
 function loadData()
-    PlayerData = QBCore.Functions.GetPlayerData()
-	local images = lib.callback.await("posters:getImages", false)
+    PlayerData = ESX.GetPlayerData()
+    local images = lib.callback.await("posters:getImages", false)
     for k,v in pairs(images) do
         DUILoaded = false
         v.duiObj = CreateDui(string.format("https://cfx-nui-%s/web/dist/index.html", GetCurrentResourceName()), v.width, v.height)
@@ -44,7 +50,9 @@ function loadData()
     end
 end
 
-RegisterNetEvent("posters:deleteClientImage", function(id)
+-- Poster manipulation events
+RegisterNetEvent("posters:deleteClientImage")
+AddEventHandler("posters:deleteClientImage", function(id)
     for k,v in pairs(ActivePosters) do
         if v.id == id then
             DestroyDui(v.duiObj)
@@ -54,7 +62,8 @@ RegisterNetEvent("posters:deleteClientImage", function(id)
     end
 end)
 
-RegisterNetEvent("posters:sendAddedImage", function(newImage)
+RegisterNetEvent("posters:sendAddedImage")
+AddEventHandler("posters:sendAddedImage", function(newImage)
     DUILoaded = false
     newImage.duiObj = CreateDui(string.format("https://cfx-nui-%s/web/dist/index.html", GetCurrentResourceName()), newImage.width, newImage.height)
     newImage.duiHandle = GetDuiHandle(newImage.duiObj)
@@ -70,6 +79,30 @@ RegisterNetEvent("posters:sendAddedImage", function(newImage)
     ActivePosters[#ActivePosters+1] = newImage
 end)
 
+-- NUI Callbacks
+RegisterNUICallback("exit", function(data, cb)
+    SetNuiFocus(false, false)
+    cb('ok')
+end)
+
+RegisterNuiCallback('loaded', function(_, cb)
+    DUILoaded = true
+    cb({resName = GetCurrentResourceName()})
+end)
+
+RegisterNUICallback("savePoster", function(data, cb)
+    SetNuiFocus(false, false)
+    CurrentPoster.url = data.url
+    CurrentPoster.width = data.width
+    CurrentPoster.height = data.height
+    CurrentPoster.id = math.random(999999, 999999999)
+    CurrentPoster.cid = PlayerData.identifier -- Adjust to ESX identifier
+    CurrentPoster.textureid = "newtexture" .. tostring(math.random(1, 100000))
+    CurrentPoster.txn = "newtexture" .. tostring(math.random(1, 100000))
+    TriggerServerEvent("posters:addNewImage", CurrentPoster)
+    cb('ok')
+end)
+
 function PlaceImage()
     editing = true
     Point1 = false
@@ -82,8 +115,8 @@ function PlaceImage()
     while editing do
         DisableControlAction(0, 38, true)
         local start,fin = GetCoordsInFrontOfCam(0, 5000)
-        local ray = StartShapeTestRay(start.x, start.y, start.z, fin.x, fin.y, fin.z, 4294967295, cache.ped, 5000)
-        local _ray,hit,pos,norm,ent = GetShapeTestResult(ray)
+        local ray = StartShapeTestRay(start.x, start.y, start.z, fin.x, fin.y, fin.z, 4294967295, PlayerPedId(), 5000)
+        local _,hit,pos,norm,ent = GetShapeTestResult(ray)
         if hit then
             DrawSphere(pos, 0.06, 0, 255, 0, 0.5)
             if not Point1 then
@@ -125,6 +158,7 @@ function PlaceImage()
     end
 end
 
+
 function DeleteImage()
     deleting = true
     lib.showTextUI("[E] Select Image Area", {
@@ -134,8 +168,8 @@ function DeleteImage()
     while deleting do
         DisableControlAction(0, 38, true)
         local start,fin = GetCoordsInFrontOfCam(0, 5000)
-        local ray = StartShapeTestRay(start.x, start.y, start.z, fin.x, fin.y, fin.z, 4294967295, cache.ped, 5000)
-        local _ray,hit,pos,norm,ent = GetShapeTestResult(ray)
+        local ray = StartShapeTestRay(start.x, start.y, start.z, fin.x, fin.y, fin.z, 4294967295, PlayerPedId(), 5000)
+        local _,hit,pos,norm,ent = GetShapeTestResult(ray)
         if hit then
             DrawSphere(pos, 0.06, 0, 255, 0, 0.5)
             if IsDisabledControlJustReleased(0, 38) then
@@ -165,7 +199,7 @@ function DeleteImage()
                         disable = {car = true, move = true, combat = true},
                         anim = { dict = 'mini@repair', clip = 'fixing_a_ped' },
                     }) then
-                        TriggerServerEvent("posters:deleteImage", currentKey, PlayerData.citizenid == currentPoster.cid)
+                        TriggerServerEvent("posters:deleteImage", currentKey, PlayerData.identifier == currentPoster.cid)
                         exports['inv-lib']:SendAlert('inform', "Poster sent for deletion!")
                     else
                         lib.notify({
@@ -175,7 +209,7 @@ function DeleteImage()
                         })
                     end
                 else
-                    exports['inv-lib']:SendAlert('error', "Could not find an poster close enough to delete. Please try again")
+                    exports['inv-lib']:SendAlert('error', "Could not find a poster close enough to delete. Please try again")
                 end
             end
         end
@@ -183,32 +217,11 @@ function DeleteImage()
     end
 end
 
-RegisterNUICallback("exit", function(data, cb)
-    SetNuiFocus(false, false)
-    cb('ok')
-end)
 
-RegisterNuiCallback('loaded', function(_, cb)
-    DUILoaded = true
-    cb({resName = GetCurrentResourceName()})
-end)
-
-RegisterNUICallback("savePoster", function(data, cb)
-    SetNuiFocus(false, false)
-    CurrentPoster.url = data.url
-    CurrentPoster.width = data.width
-    CurrentPoster.height = data.height
-    CurrentPoster.id = math.random(999999, 999999999)
-    CurrentPoster.cid = PlayerData.citizenid
-    CurrentPoster.textureid = "newtexture"..tostring(math.random(1, 100000))
-    CurrentPoster.txn = "newtexture"..tostring(math.random(1, 100000))
-    TriggerServerEvent("posters:addNewImage", CurrentPoster)
-    cb('ok')
-end)
-
+-- Continuously update coordinates and check proximity to posters
 CreateThread(function()
     while true do
-        GLOBAL_COORDS = GetEntityCoords(cache.ped)
+        GLOBAL_COORDS = GetEntityCoords(PlayerPedId()) -- Ensure PlayerPedId() is used
         Wait(1500)
     end
 end)
@@ -226,10 +239,12 @@ CreateThread(function()
     end
 end)
 
-RegisterNetEvent("posters:placeImage", function()
+RegisterNetEvent("posters:placeImage")
+AddEventHandler("posters:placeImage", function()
     PlaceImage()
 end)
 
-RegisterNetEvent("posters:removePoster", function()
-	DeleteImage()
+RegisterNetEvent("posters:removePoster")
+AddEventHandler("posters:removePoster", function()
+    DeleteImage()
 end)
