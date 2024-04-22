@@ -1,21 +1,30 @@
 RegisteredSprays = {}
-local QBCore = exports['qb-core']:GetCoreObject()
 
-QBCore.Functions.CreateUseableItem('poster', function(source, item)
+
+ESX = exports["es_extended"]:getSharedObject()
+
+
+ESX.RegisterUsableItem('poster', function(source)
     TriggerClientEvent("posters:placeImage", source)
 end)
 
-RegisterNetEvent("posters:addNewImage", function(data)
+-- Add new image event
+RegisterNetEvent("posters:addNewImage")
+AddEventHandler("posters:addNewImage", function(data)
+    local xPlayer = ESX.GetPlayerFromId(source)
     RegisteredSprays[#RegisteredSprays+1] = data
     TriggerClientEvent("posters:sendAddedImage", -1, data)
-    exports.ox_inventory:RemoveItem(source, "poster", 1)
+    xPlayer.removeInventoryItem('poster', 1)
 end)
 
-lib.callback.register('posters:getImages', function(source)
-    return RegisteredSprays
+-- Get images callback
+ESX.RegisterServerCallback('posters:getImages', function(source, cb)
+    cb(RegisteredSprays)
 end)
 
-RegisterNetEvent("posters:deleteImage", function(id, isOwner)
+-- Delete image event
+RegisterNetEvent("posters:deleteImage")
+AddEventHandler("posters:deleteImage", function(id, isOwner)
     for k,v in pairs(RegisteredSprays) do
         if v.id == id then
             table.remove(RegisteredSprays, k)
@@ -23,10 +32,12 @@ RegisterNetEvent("posters:deleteImage", function(id, isOwner)
         end
     end
     if isOwner then
-        exports.ox_inventory:AddItem(source, "poster", 1)
+        local xPlayer = ESX.GetPlayerFromId(source)
+        xPlayer.addInventoryItem('poster', 1)
     end
 end)
 
-RegisterCommand("removeposter", function(source, args, raw)
+-- Register a command to remove a poster
+RegisterCommand("removeposter", function(source, args, rawCommand)
     TriggerClientEvent("posters:removePoster", source)
 end)
