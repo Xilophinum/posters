@@ -33,8 +33,12 @@ local PlayerData = {}
 
 -- Event when player is loaded
 AddEventHandler('playerSpawned', function()
+    while Framework == nil do
+        Citizen.Wait(10)
+    end
     PlayerData = GetPlayerData()
 end)
+
 
 -- Load data function
 function loadData()
