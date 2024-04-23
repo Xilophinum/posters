@@ -1,3 +1,6 @@
+Config = {}
+Config.OxInv = false
+
 GetCoordsInFrontOfCam = function(...)   
 	local unpack = table.unpack   
 	local coords,direction = GetGameplayCamCoord(), RotationToDirection()   
