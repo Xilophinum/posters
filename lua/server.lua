@@ -47,7 +47,7 @@ RegisterNetEvent("posters:deleteImage", function(id, isOwner)
     end
     if isOwner then
         if Config.Framework == 'QBCore' then
-            -- Specific QBCore handling for giving item back
+            exports.ox_inventory:AddItem(source, "poster", 1)
         elseif Config.Framework == 'ESX' then
             local xPlayer = ESX.GetPlayerFromId(source)
             xPlayer.addInventoryItem('poster', 1)
