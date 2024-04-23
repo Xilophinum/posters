@@ -6,9 +6,15 @@ QBCore.Functions.CreateUseableItem('poster', function(source, item)
 end)
 
 RegisterNetEvent("posters:addNewImage", function(data)
+    local Player = QBCore.Functions.GetPlayer(source)
     RegisteredSprays[#RegisteredSprays+1] = data
     TriggerClientEvent("posters:sendAddedImage", -1, data)
-    exports.ox_inventory:RemoveItem(source, "poster", 1)
+    if Config.OxInv then
+        exports.ox_inventory:RemoveItem(source, "poster", 1)
+    else
+        if not Player then return end
+        Player.Functions.RemoveItem("poster", 1)
+    end
 end)
 
 lib.callback.register('posters:getImages', function(source)
@@ -16,6 +22,7 @@ lib.callback.register('posters:getImages', function(source)
 end)
 
 RegisterNetEvent("posters:deleteImage", function(id, isOwner)
+    local Player = QBCore.Functions.GetPlayer(source)
     for k,v in pairs(RegisteredSprays) do
         if v.id == id then
             table.remove(RegisteredSprays, k)
@@ -23,7 +30,12 @@ RegisterNetEvent("posters:deleteImage", function(id, isOwner)
         end
     end
     if isOwner then
-        exports.ox_inventory:AddItem(source, "poster", 1)
+        if Config.OxInv then
+            exports.ox_inventory:AddItem(source, "poster", 1)
+        else
+            if not Player then return end
+            Player.Functions. AddItem("poster", 1)
+        end
     end
 end)
 
