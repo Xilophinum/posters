@@ -8,8 +8,6 @@ if Config.Framework == "qb-core" then
 elseif Config.Framework == "ESX" then
     Framework = exports["es_extended"]:getSharedObject()
     Framework.RegisterUsableItem('poster', function(source)
-        local xPlayer = Framework.GetPlayerFromId(source)
-        xPlayer.removeInventoryItem('poster', 1)
         TriggerClientEvent("posters:placeImage", source)
     end)
 end
