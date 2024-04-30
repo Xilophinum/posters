@@ -1,3 +1,8 @@
+Config = {}
+Config.Framework = "qb-core" -- can be qb-core or ESX
+Config.Inventory = "ox_inventory" -- can be ox_inventory or qb-inventory
+Config.RenderDistance = 50.0
+
 GetCoordsInFrontOfCam = function(...)   
 	local unpack = table.unpack   
 	local coords,direction = GetGameplayCamCoord(), RotationToDirection()   

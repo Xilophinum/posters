@@ -7,10 +7,15 @@ ActivePosters = {}
 CurrentPoster = {}
 GLOBAL_COORDS = nil
 TXD = nil 
-local QBCore = exports['qb-core']:GetCoreObject()
 PlayerData = {}
+local Framework
 
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+    loadData()
+end)
+
+RegisterNetEvent('esx:playerLoaded', function(xPlayer)
+    PlayerData = xPlayer
     loadData()
 end)
 
@@ -24,8 +29,21 @@ RegisterNetEvent("QBCore:Client:OnPlayerUnload", function()
     PlayerData = {}
 end)
 
+local function GetPlayerData()
+    if Config.Framework == 'qb-core' then
+        return Framework.Functions.GetPlayerData()
+    elseif Config.Framework == 'ESX' then
+        return Framework.GetPlayerData()
+    end
+end
+
 function loadData()
-    PlayerData = QBCore.Functions.GetPlayerData()
+    if Config.Framework == "qb-core" then
+        Framework = exports['qb-core']:GetCoreObject()
+    elseif Config.Framework == "ESX" then
+        Framework = exports["es_extended"]:getSharedObject()
+    end
+    PlayerData = GetPlayerData()
 	local images = lib.callback.await("posters:getImages", false)
     for k,v in pairs(images) do
         DUILoaded = false
@@ -118,7 +136,7 @@ function PlaceImage()
         SetNuiFocus(true, true)
     else
         lib.notify({
-            title = 'Poster',
+            title = 'Posters',
             description = 'Poster size is too large!',
             type = 'error'
         })
@@ -165,17 +183,29 @@ function DeleteImage()
                         disable = {car = true, move = true, combat = true},
                         anim = { dict = 'mini@repair', clip = 'fixing_a_ped' },
                     }) then
-                        TriggerServerEvent("posters:deleteImage", currentKey, PlayerData.citizenid == currentPoster.cid)
-                        exports['inv-lib']:SendAlert('inform', "Poster sent for deletion!")
+                        if Config.Framework == "qb-core" then
+                            TriggerServerEvent("posters:deleteImage", currentKey, PlayerData.citizenid == currentPoster.cid)
+                        elseif Config.Framework == "ESX" then
+                            TriggerServerEvent("posters:deleteImage", currentKey, PlayerData.identifier == currentPoster.cid)
+                        end
+                        lib.notify({
+                            title = 'Posters',
+                            description = "Poster sent for deletion!",
+                            type = "inform",
+                        })
                     else
                         lib.notify({
-                            title = 'Business',
+                            title = 'Posters',
                             description = "Menu deletion canceled.",
                             type = "error",
                         })
                     end
                 else
-                    exports['inv-lib']:SendAlert('error', "Could not find an poster close enough to delete. Please try again")
+                    lib.notify({
+                        title = 'Posters',
+                        description = "Could not find an poster close enough to delete. Please try again",
+                        type = "error",
+                    })
                 end
             end
         end
@@ -199,7 +229,11 @@ RegisterNUICallback("savePoster", function(data, cb)
     CurrentPoster.width = data.width
     CurrentPoster.height = data.height
     CurrentPoster.id = math.random(999999, 999999999)
-    CurrentPoster.cid = PlayerData.citizenid
+    if Config.Framework == "qb-core" then
+        CurrentPoster.cid = PlayerData.citizenid
+    elseif Config.Framework == "ESX" then
+        CurrentPoster.cid = PlayerData.identifier
+    end
     CurrentPoster.textureid = "newtexture"..tostring(math.random(1, 100000))
     CurrentPoster.txn = "newtexture"..tostring(math.random(1, 100000))
     TriggerServerEvent("posters:addNewImage", CurrentPoster)
@@ -217,7 +251,7 @@ CreateThread(function()
     while true do
         local sleep = 1500
         for k,v in pairs(ActivePosters) do
-            if #(GLOBAL_COORDS - v.pointA) < 50.0 or #(GLOBAL_COORDS - v.pointB) < 50.0 then
+            if #(GLOBAL_COORDS - v.pointA) < Config.RenderDistance or #(GLOBAL_COORDS - v.pointB) < Config.RenderDistance then
                 sleep = 0
                 DrawImageOnArea(v.pointA, v.pointB, v.pointB.z, v.pointA.z, 255, 255, 255, 255, v.textureid, v.txn)
             end

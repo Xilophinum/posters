@@ -1,14 +1,30 @@
 RegisteredSprays = {}
-local QBCore = exports['qb-core']:GetCoreObject()
-
-QBCore.Functions.CreateUseableItem('poster', function(source, item)
-    TriggerClientEvent("posters:placeImage", source)
-end)
+local Framework
+if Config.Framework == "qb-core" then
+    Framework = exports['qb-core']:GetCoreObject()
+    Framework.Functions.CreateUseableItem('poster', function(source, item)
+        TriggerClientEvent("posters:placeImage", source)
+    end)
+elseif Config.Framework == "ESX" then
+    Framework = exports["es_extended"]:getSharedObject()
+    Framework.RegisterUsableItem('poster', function(source)
+        local xPlayer = Framework.GetPlayerFromId(source)
+        xPlayer.removeInventoryItem('poster', 1)
+        TriggerClientEvent("posters:placeImage", source)
+    end)
+end
 
 RegisterNetEvent("posters:addNewImage", function(data)
+    local _source = source
     RegisteredSprays[#RegisteredSprays+1] = data
     TriggerClientEvent("posters:sendAddedImage", -1, data)
-    exports.ox_inventory:RemoveItem(source, "poster", 1)
+    if Config.Inventory == "ox_inventory" then
+        exports.ox_inventory:RemoveItem(_source, "poster", 1)
+    end
+    if Config.Inventory == "qb-inventory" then
+        local Player = Framework.Functions.GetPlayer(_source)
+        Player.Functions.RemoveItem("poster", 1)
+    end
 end)
 
 lib.callback.register('posters:getImages', function(source)
@@ -23,7 +39,13 @@ RegisterNetEvent("posters:deleteImage", function(id, isOwner)
         end
     end
     if isOwner then
-        exports.ox_inventory:AddItem(source, "poster", 1)
+        if Config.Inventory == "ox_inventory" then
+            exports.ox_inventory:AddItem(source, "poster", 1)
+        end
+        if Config.Inventory == "qb-inventory" then
+            local Player = Framework.Functions.GetPlayer(source)
+            Player.Functions.AddItem("poster", 1)
+        end
     end
 end)
 
