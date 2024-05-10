@@ -58,6 +58,7 @@ function loadData()
             width = v.width,
             height = v.height,
         }))
+        ActivePosters[#ActivePosters+1] = v
         Wait(1000)
     end
 end
