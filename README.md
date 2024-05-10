@@ -15,7 +15,7 @@ This system is great for "graffiti" tagging, advertising your player owned busin
 
 ## Dependencies
 - ox_lib
-- QBCore
-- ox_inventory
+- QBCore or ESX
+- ox_inventory or qb-inventory
   
 As I stated above, feel free to rework this how you would like with your own systems. 
